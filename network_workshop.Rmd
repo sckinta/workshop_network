@@ -1,0 +1,670 @@
+---
+title: "Network_workshop"
+author: "Chun Su"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r warning=FALSE, message=FALSE}
+library(igraph)
+library(tidyverse)
+library(ggraph)
+library(gridExtra)
+```
+
+# IGRAPH object
+```{r igraph_object}
+make_graph(letters[1:10], directed = T)
+```
+
+# Graph Basics
+
+## Create a graph
+There are many ways to create graph from scratch. Here we are going to introduce three most popular ways to create graph using user-defined data.
+
+### From edge list 
+The example below generates a directed graph from a list of vertex pair (edge)
+
+```{r edgelist}
+edge_list = data.frame(from = c(1, 2, 2, 3, 4), to = c(2, 3, 4, 2, 1))
+edge_list
+m = as.matrix(edge_list)
+g = graph_from_edgelist(m,directed = TRUE)
+g
+```
+
+If the edge is given in a single vector, the default make_graph will use the order of vector to make one-mode graph. It means that the first edge points from the first element to the second, the second edge from the third to the fourth, etc.
+```{r make_graph_from_edgeVector}
+g = make_graph(letters[1:10], directed = T)
+g
+```
+
+### From adjacent matrix
+The example below generates a undirected graph from a binary matrix, in which  nodes are matrix colname and rowname.
+
+```{r adjacentMatrix}
+set.seed(123)
+adj_matrix = matrix(sample(0:1, 100, replace=TRUE, prob=c(0.8,0.1)), nc=10)
+colnames(adj_matrix)=letters[1:10]
+rownames(adj_matrix)=letters[1:10]
+adj_matrix
+g = graph_from_adjacency_matrix(adj_matrix, mode = "undirected", weighted = T)
+g
+```
+
+There are other modes available with details at https://igraph.org/r/doc/graph_from_adjacency_matrix.html
+
+### From data.frame
+The graph generated from data.frame can add all attributes at once. Here is the example from official website. The attributes for nodes (actors) are `age` and `gender`, and edge (relationship) attributes include same.dept, friendship and advice
+
+```{r graphDataFrame}
+actors <- data.frame(
+  name=c("Alice", "Bob", "Cecil", "David","Esmeralda"),
+  age=c(48,33,45,34,21),
+  gender=c("F","M","F","M","F"))
+relations <- data.frame(
+  from=c("Bob", "Cecil", "Cecil", "David","David", "Esmeralda"),
+  to=c("Alice", "Bob", "Alice", "Alice", "Bob", "Alice"),
+  same.dept=c(FALSE,FALSE,TRUE,FALSE,FALSE,TRUE),
+  friendship=c(4,5,5,2,1,1), 
+  advice=c(4,5,5,4,2,3)
+  )
+g <- graph_from_data_frame(relations, directed=TRUE, vertices=actors)
+g
+plot(g)
+```
+
+### Create random graph
+Random graph generation is useful when it comes to simulation.  
+
+* `gnp` and `gnm` generate random graph by assumming the same constant probability for every possible edge. The required parameters for `gnp` and `gnm` are 
+
+** `gnp` --- the number of nodes/vertex and the constant probability
+** `gnm` --- the number of nodes/vertex and the number of edges
+
+```{r gnp}
+# sample 10 vertex, every possible edge is created with the same constant probability 0.3
+set.seed(12)
+sample_gnp(10, 0.3)
+
+# sample 10 vertex, create a 15-edge graph
+set.seed(123)
+sample_gnm(10, 15)
+
+```
+
+* Random scale free network, which means a network whose degree of nodes distribution follows a power law. `sample_pa` generates scale-free graphs according to the Barabasi-Albert model. We start with a single vertex and no edges in the first time step. Then we add one vertex in each time step and the new vertex initiates some edges to old vertices. The probability that an old vertex is chosen is given by $p(i) ~ k_i * power + zero.appeal$
+
+```{r BA_random}
+set.seed(123)
+sample_pa(100, power = 2)
+```
+
+## Retrieve vertex and edge from IGRAPH
+
+Vertex and edge information can be retrieved from igraph use two ways.  
+
+* Use `igraph.vs` and `igraph.es"" object
+* Convert to data.frame
+
+```{r vs_es_object}
+# use V() to obtain igraph.vs object
+V(g)$name
+V(g)$age
+V(g)$gender
+
+# use E() to get igraph.es object
+
+```
+
+`igraph.es` and `igraph.vs` object can be converted to classic vector of names by `as_ids()`.  
+
+```{r as_data_frame}
+# vertices all attributes
+igraph::as_data_frame(g, what = "vertices")
+
+# edges all attributes
+igraph::as_data_frame(g, what = "edges")
+```
+
+## Add/Delete vertex and edges
+
+Vertices and edges can be added to existing graph by `add_()` or `+`. Please be aware that vertices of added new edges must be from known vertices already in the graph.  
+
+```{r add}
+# add vertices 
+g %>% add_vertices(2, name=c("Lisa","Zack")) # the first argument is number of vertex
+g + vertices(c("Lisa","Zack"))
+
+# add connected edges (even number of vertices). The vertices must be from known vertices already in the graph 
+g %>% add_edges(c("Alice","Bob"))
+g + edge(c("Alice","Bob"))
+
+# add paths. The vertices must be from known vertices already in the graph 
+g + path("Alice","Bob","Cecil")
+
+# If a new vertex needs to be added to current graph, using add graph method instead 
+g + make_graph(c("Alice","Bob","Bob","Melisa"))
+```
+
+Delete can be done in a similar way.
+
+```{r delete}
+### remove the vertices whose age is younger than 30
+vertex_df = g %>% igraph::as_data_frame(what="vertices") %>% tbl_df %>% mutate(index=row_number()) %>% filter(age < 30)
+# remove vertices by index number 
+g %>% delete_vertices(vertex_df$index)
+# remove vertice by name 
+g %>% delete_vertices(vertex_df$name)
+
+
+### remove the edges with friendship <= 1 
+edge_df = g %>% igraph::as_data_frame(what="edges") %>% tbl_df %>% mutate(index=row_number()) %>% mutate(name=paste(from,to,sep="|")) %>% filter(friendship <= 1)
+# remove vertice by index
+g %>% delete_edges(edge_df$index)
+# remove vertice by name 
+g %>% delete_edges(edge_df$name)
+
+```
+
+The attributes of vertices and edges can be added or deleted to existing graph by `set_vertex_attr()`/`set_edge_attr()` or `delete_vertex_attr()`/`delete_edge_attr()`.  
+
+```{r add_attr}
+# add a new attr "relationship" for people in the same dept
+edge_df = g %>% igraph::as_data_frame(what="edges") %>% 
+  mutate(relationship=ifelse(same.dept,"collegue",NA))
+
+g %>% set_edge_attr("relationship", which(!is.na(edge_df$relationship)), edge_df$relationship[!is.na(edge_df$relationship)])
+
+```
+
+## Merge graph
+
+Graphs union/intersection is to merge two or more graphs into one graph using the shared the vertices. 
+
+```{r merge}
+g2 = graph_from_literal("David"-+"Charlie"+-+"Lisa",
+                        "Lisa"+-+"David"+-"Jim",
+                        "Zack"+-"Esmeralda"-+"Bob",
+                        "Zack"+-"Charlie",
+                        "Lisa"+-"Lisa",
+                        "Bob"-+"Alice"+-"Esmeralda"
+                        )
+
+#### union graph
+g3 = igraph::union(g,g2)
+#### graph intersection
+g4 = igraph::intersection(g,g2)
+
+par(mfrow=c(2,2)) 
+plot(g, edge.arrow.size=.4)
+plot(g2, edge.arrow.size=.4)
+plot(g3, edge.arrow.size=.4)
+plot(g4, edge.arrow.size=.4)
+```
+
+## Induce subgraph
+
+The subgraph can be induced by either vertex or edge names/index. The edge names are in the form `from|to`. 
+
+```{r subgraph}
+# induce a subgraph using a list of vertices
+induced_subgraph(g, v=c("Alice","Bob","Cecil"))
+
+# induce a subgraph using edges
+subgraph.edges(g, c("Bob|Alice","Cecil|Bob","Cecil|Alice"), delete.vertices = TRUE)
+
+# induce a subgraph using edges attribute (friendship score stronger than 3)
+e1 = E(g)[E(g)$friendship > 3]
+subgraph.edges(g, e1, delete.vertices = TRUE)
+```
+
+# Graph Advance
+
+In this session, we are going to use a new undirected graph (gr) generated by `sample_gnp()`.
+
+```{r gr}
+# generate random graph 
+set.seed(12) 
+gr <- sample_gnp(10, 0.3)
+plot(gr)
+
+```
+
+## Graph measurement
+
+### Degree and strength
+
+**Degree** is a very important graph measurement. For a given node(s) to get its degree, we use `degree`. Be aware that, for directed graph, the node degree can be in-degree (the edge number pointing to the node) and out-degree (the edge number pointing from node). We can also summarise the all degree by using `degree_distribution`.
+
+```{r degree}
+# get degree for each node 
+degree(gr, v=1:10)
+
+# degree distribution
+degree_distribution(g) # probability for degree 0,1,2,3,4
+```
+
+`strength` is weigthed version of `degree`,  by summing up the edge weights of the adjacent edges for each vertex. 
+
+```{r strength}
+# add random weight attribute
+set.seed(12)
+gr2 = gr %>% set_edge_attr(
+  "weight",index=E(gr),
+  value=sample(seq(0,1,0.05),size=length(E(gr)))
+)
+# calculate strength
+strength(gr2, weights = E(gr)$weight)
+# [1] 0.50 1.00 2.25 0.85 1.80 0.25 0.85 1.55 1.20 1.55
+
+```
+
+### Order and path
+
+Order measures measures the edge number from one node to another. In `igraph` package, we use `distances` function to get order between two vertices. For directed graph, `in` mode only follow the paths toward the first node, while `out` mode goes away from the first node. If no connection can be made, `Inf` will be return. 
+
+```{r order}
+# count all edges from 1 to 10, regardless of direction 
+distances(gr, v=1, to=10, mode="all", weights = NA)
+
+# pairwise distance table 
+distances(gr, mode="all")
+```
+
+To get detail route from one node to another, we use `path`.
+
+```{r path}
+# shortest path to connect
+all_shortest_paths(gr, 1,10)$res
+
+
+# all path to connect
+all_simple_paths(gr, 1,10)
+
+```
+
+### Transitivity
+
+**Transitivity** measures the probability that the adjacent vertices of a vertex are connected. This is also called the **clustering coefficient**, a proxy to determine how well connected the graph is. This property is very important in social networks, and to a lesser degree in other networks
+
+
+```{r Transitivity}
+# two extreme classes -- full graph and ring graph
+g1 = make_full_graph(10)
+plot(g1)
+transitivity(g1)
+
+g2 = make_ring(10)
+plot(g2)
+transitivity(g2)
+
+```
+
+There are multiple different types of transivity can be calculated (weighted or unweigthed). Also, the transivity can be calcualted locally for a subgraph by specifying vertex ids. See details by `help("transitivity")`
+
+### Centrality
+
+Centrality indices identify the most important vertices within a graph. In other words, the "hub" of network. However, this "importance" can be conceived in two ways:  
+
+* in relation to a type of flow or transfer across the network. 
+* involvement in the cohesiveness of the network
+
+The simplest of centrality indicator is degree centrality (`centr_degree`), aka, a node is important if it has many neighbors. Besides degree centrality, there are 
+
+* closeness centrality (`centr_clo`) - a node is important if it takes the shortest mean distance from a vertex to other vertices
+* betweenness centrality (`centr_betw`) - a node is important if extent to which a vertex lies on paths between other vertices are high. 
+* eigenvector centrality (`centr_eigen`) - a node is important if it is linked to by other important nodes.
+
+```{r centrality}
+centr_degree(g, mode="all")
+centr_clo(g, mode = "all")
+centr_betw(g, directed = FALSE)
+centr_eigen(g,directed = FALSE)
+```
+
+Many other centrality indicators refer to [wiki](https://en.wikipedia.org/wiki/Centrality)
+
+## Graph clustering
+
+Graph clustering is the most useful calculation that can be done in igraph object. There are a whole bunch of research on this. Here only basic clustering methods were covered here. For more information, read http://www.leonidzhukov.net/hse/2016/networks/papers/GraphClustering_Schaeffer07.pdf
+
+### decompose graph
+
+To split graph into connected subgraph, `decompose.graph` calculates the connected components of your graph. A **component** is a subgraph in which all nodes are inter-connected.
+
+```{r decompose}
+# decompose graph to connected components
+dg <- decompose.graph(gr)
+dg
+
+# summary statics graph components
+components(gr)
+
+# plot components
+coords <- layout_(gr, nicely())
+plot(gr, layout=coords,
+     mark.groups = split(as_ids(V(gr)), components(gr)$membership)
+     )
+
+```
+
+### Cliques
+
+**Clique** is a special subgraph in which every two distinct vertices are adjacent. The direction is usually ignored for clique calculations
+
+```{r clique}
+# extract cliques that contain more than 3 vertices
+cliques(g, min=3)
+
+# get cliques with largest number of vertices
+largest_cliques(g)
+
+# plot cliques
+cl <- cliques(gr, 3)
+
+coords <- layout_(gr, nicely())
+plot(gr, layout=coords,
+     mark.groups=lapply(cl, function(g){as_ids(g)}), 
+     mark.col=c("#C5E5E7","#ECD89A"))
+
+```
+
+### Communities and modules
+
+Graph **communities structure** is defined if the nodes of the network can be easily grouped into (potentially overlapping) sets of nodes such that each set of nodes is densely connected internally. **Modularity** is always used as a measure the strength of division of a network into community for optimization methods in detecting community structure in networks.
+
+There are many algorithms to cluster graph to communities.
+
+* **cluster_edge_betweenness**  a hierarchical decomposition process where edges are removed in the decreasing order of their edge betweenness scores.  
+* **cluster_optimal** - a top-down hierarchical approach that optimizes the modularity function
+* **cluster_walktrap** - an approach based on random walks
+* **cluster_fast_greedy**
+* **cluster_label_prop**
+* **cluster_leading_eigen**
+* **cluster_Louvain**
+* **cluster_spinglass**
+
+For more information to determine which cluster method to use can be found in the discussion https://stackoverflow.com/questions/9471906/what-are-the-differences-between-community-detection-algorithms-in-igraph
+
+```{r community}
+# cluster graph using walktrap method, turn a ”communities” object
+wtc <- cluster_walktrap(gr) 
+wtc
+
+# find membership for each vertice
+membership(wtc)
+
+# calculate modularity for walktrap clustering on this graph
+modularity(wtc) 
+
+# plot community
+coords <- layout_(gr, nicely())
+plot(wtc, gr, layout=coords)
+```
+
+
+# Network visualization
+
+Network visualization are supported by two aspects --- the aestheic part of network elements (aka, vertices and edges) and layout of network. There are multiple packages available for these aspects. I will focus on the basic igraph plot (more like base R plot) and the application of ggraph (comparable to ggplot2).  
+
+In this part, we will go back to use actor graph data.
+
+```{r prepare_data}
+actors <- data.frame(
+  name=c("Alice", "Bob", "Cecil", "David","Esmeralda"),
+  age=c(48,33,45,34,21),
+  gender=c("F","M","F","M","F"))
+relations <- data.frame(
+  from=c("Bob", "Cecil", "Cecil", "David","David", "Esmeralda"),
+  to=c("Alice", "Bob", "Alice", "Alice", "Bob", "Alice"),
+  same.dept=c(FALSE,FALSE,TRUE,FALSE,FALSE,TRUE),
+  friendship=c(4,5,5,2,1,1), 
+  advice=c(4,5,5,4,2,3)
+  )
+g <- graph_from_data_frame(relations, directed=TRUE, vertices=actors)
+```
+
+
+## Aesthetics of network elements
+
+The aesthetics of both vertices and edges can be manipulated at color, transparency. Specially for vertices, we can also manipulate its shape, size and fill. For edges, we can manipulate its width/thickness, linetype, arrow and so on. Here, use simple example "actors" to show you how to present aesthetics using `igraph` default plot and `ggraph`
+
+### Vertice aesthetics
+Specify aesthetics in vertex attribute
+
+```{r vertice_aes_igraph}
+# make female and male color different
+v = igraph::as_data_frame(g, what="vertice") %>% tbl_df %>% 
+  mutate(color=case_when(gender=="F" ~ "red", gender=="M" ~ "blue"))
+g = g %>% set_vertex_attr("color", value=v$color)
+plot(g)
+
+# make age as size
+v = v %>% 
+  mutate(size=case_when(age < 30 ~ 10, age < 40 & age >30 ~ 20, age > 40 ~ 30))
+g = g %>% set_vertex_attr("size", value=v$size)
+plot(g)
+```
+
+The methods mentioned above can also be done by specify in `plot()`. One quick example below show the shape aesthetics. Check igraph valid shape names by `names(igraph:::.igraph.shapes)`
+
+```{r vertice_aes_igraph2}
+# make gender as shape
+v = v %>% 
+  mutate(shape=case_when(gender=="F" ~ "circle", gender=="M" ~ "rectangle"))
+
+plot(g, vertex.shape=v$shape)
+legend('topleft',legend=unique(v$gender),pch=c(21, 22),pt.bg=c("red","blue"))
+```
+
+Be aware that the aesthetics specified by attributes can be overwritten by specifying in `plot()`. In addition, those aesthetics can also be used to apply to all vertices like `plot(g, vertex.shape="rectangle")`. The attributes to be manipulated in igraph (using base R) are limited. To find all the plotting attributes, try `?plot.igraph` or go to https://igraph.org/r/doc/plot.common.html
+
+We can also draw attention to certain nodes by `mark.groups` in plot
+
+```{r mark.groups}
+# mark dept
+g = g %>% set_vertex_attr("dept",value=c("sale","IT","sale","IT","sale")) %>% 
+  set_edge_attr("same.dept",value=c(F,F,T,F,T,T))
+v = igraph::as_data_frame(g, "vertices")
+plot(g, 
+     mark.groups=list(
+       unlist(v %>% filter(dept=="sale") %>% select(name)),
+       unlist(v %>% filter(dept=="IT") %>% select(name))
+       ), 
+     mark.col=c("#C5E5E7","#ECD89A"), mark.border=NA)
+```
+
+`ggraph` is a ggplot version of graph plotting. Using graph object as input, it can convert vertice attributes to plot attribute automatically or manually. 
+
+```{r vertice_aes_ggraph}
+v = v %>% 
+  mutate(age_range=case_when(age < 30 ~ 20, age < 40 & age >30 ~ 30, age > 40 ~ 40))
+g = g %>% set_vertex_attr("age_range", value=v$age_range)
+ggraph(g, layout = "kk") +
+  geom_node_point(aes(size=age_range, color=gender), alpha=0.5) +
+  geom_node_text(aes(label=name)) + 
+  geom_edge_link() +
+  scale_size_continuous(breaks=c(20,30,40), range = c(2, 6)) +
+  theme_void() 
+```
+
+Almost all the ggplots theme, scale functions are available for ggraph. More details refer to https://www.rdocumentation.org/packages/ggraph/versions/1.0.2
+
+### Edge aesthetics
+
+Similar to vertex aesthetics, edge plotting aesthetics can be manipulated both igraph default plotting and ggraph plotting
+
+```{r edge_aesthetics_igraph}
+# use linetype present whether come from same department, and line width presents friendship
+e = igraph::as_data_frame(g, what="edges") %>% tbl_df %>% 
+  mutate(width=friendship) %>% 
+  mutate(lty=ifelse(same.dept,1,2))
+plot(
+  g %>% set_edge_attr("width",value=e$width) %>% set_edge_attr("lty",value=e$lty),
+  edge.arrow.size=0.8,
+  edge.curved=T
+)
+legend("topleft", legend=unique(v$gender),pch=21,pt.bg=c("red","blue"), title="gender", box.lty=0)
+legend("left",legend=unique(e$same.dept),lty=c(1,2), title = "same.dept",box.lty=0)
+legend("topright", legend=sort(unique(e$friendship)), lwd=sort(unique(e$friendship)), title="friendship", box.lty=0)
+```
+
+Using ggraph to show edges attribute is much easier.
+
+```{r edge_aesthetics_ggraph}
+ggraph(g, layout="kk") +
+  geom_edge_link(aes(edge_width=friendship, edge_linetype=same.dept), arrow = arrow(angle=5, length = unit(0.3, "inches"))) +
+  geom_node_point(aes(color=gender), size=6) +
+  geom_node_text(aes(label=name), nudge_y = -0.1, nudge_x = -0.1) +
+  scale_edge_width(range = c(1, 2)) +
+  theme_void() 
+```
+
+### Facet 
+One big advantage of ggraph is using facet. It can be `facet_edges` or `facet_nodes` or `facet_graph`. Here I will only show example of `facet_nodes`.
+
+```{r facet_nodes}
+g = g %>% set_vertex_attr("dept",value=c("sale","IT","sale","IT","sale")) %>% 
+  set_edge_attr("same.dept",value=c(F,F,T,F,T,T))
+
+#  facet based on the dept
+ggraph(g, layout="kk") +
+  facet_nodes(~dept, drop = F) +
+  geom_edge_link(aes(edge_width=friendship, linetype=same.dept), arrow = arrow(angle=5, length = unit(0.3, "inches"))) +
+  geom_node_point(aes(color=gender), size=6) +
+  geom_node_text(aes(label=name), nudge_y = -0.1, nudge_x = -0.1) +
+  scale_edge_width(range = c(1, 2))
+```
+
+## Layout
+
+There are many layouts available for both igraph and ggraph pacakges. Igraph provides a huge amount of layouts. https://igraph.org/r/doc/layout_.html
+
+* **Standard layouts**
+    + **bipartite**: minimize edge-crossings in a simple two-row (or column) layout for bipartite graphs.
+    + **star**: place one node in the center and the rest equidistantly around it. `as_star()`
+    + **circle**: place nodes in a circle in the order of their index. Consider using layout_igraph_linear with circular=TRUE for more control. `in_circle()`
+    + **nicely**: default, tries to pick an appropriate layout. `nicely`
+    + **dh**: uses Davidson and Harels simulated annealing algorithm to place nodes. `with_dh()`
+    + **gem**: place nodes on the plane using the GEM force-directed layout algorithm. `with_gem`
+    + **graphopt**: uses the Graphopt algorithm based on alternating attraction and repulsion to place nodes. `with_graphopt()`
+    + **grid**:place nodes on a rectangular grid. `on_grid()`
+    + **mds**: perform a multidimensional scaling of nodes using either the shortest path or a user supplied distance. `with_mds()`
+    + **sphere**: place nodes uniformly on a sphere - less relevant for 2D visualizations of networks. `with_sphere()`
+    + **randomly**: places nodes uniformly random. `randomly`
+    + **fr**: places nodes according to the force-directed algorithm of Fruchterman and Reingold. `with_fr()`
+    + **kk**: uses the spring-based algorithm by Kamada and Kawai to place nodes. `with_kk()`
+    + **drl**: uses the force directed algorithm from the DrL toolbox to place nodes. `with_drl()`
+    + **lgl**: uses the algorithm from Large Graph Layout to place nodes. See with_lgl `with_lgl()`
+
+
+* **Hierarchical layouts**
+    + **tree**: uses the Reingold-Tilford algorithm to place the nodes below their parent with the parent centered above its children. `as_tree()`
+    + **sugiyama**: designed for directed acyclic graphs (that is, hierarchies where multiple parents are allowed) it minimizes the number of crossing edges.
+
+Here we are going to show an example how to switch standard layout using the same data.
+
+```{r layout_igraph}
+par(mfrow=c(2,3))
+# star layout -- help determine center
+coords <- layout_(g, as_star())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("star")
+
+# circle layout
+coords <- layout_(g, in_circle())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("circle")
+
+# grid
+coords <- layout_(g, on_grid())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("grid")
+
+# nicely
+coords <- layout_(g, nicely())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("nicely")
+
+# kk
+coords <- layout_(g, with_kk())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("Kamada and Kawai(kk)")
+
+# fr
+coords <- layout_(g, with_fr())
+plot(g, layout = coords, edge.arrow.size=0.4)
+title("force-directed(fr)")
+```
+
+Hierarchical layouts can plot data in layer. Here show example how to use sugiyama layout.
+
+```{r sugiyama_layout}
+# make different dept nodes at different node
+g = g %>% set_vertex_attr("dept",value=c("sale","IT","sale","IT","sale")) %>% 
+  set_edge_attr("same.dept",value=c(F,F,T,F,T,T))
+
+v = igraph::as_data_frame(g, "vertices") %>% tbl_df %>% 
+  mutate(layer=ifelse(dept=="sale",1,2))
+
+e = igraph::as_data_frame(g, what="edges") %>% tbl_df %>% 
+  mutate(width=friendship) %>% 
+  mutate(lty=ifelse(same.dept,1,2))
+
+g = g %>% set_edge_attr("width",value=e$width) %>% set_edge_attr("lty",value=e$lty)
+
+lay1 <-  layout_with_sugiyama(g, layers=v$layer, attributes="all")
+
+plot(lay1$extd_graph, edge.curved=T)
+legend("topleft", legend=unique(v$gender),pch=21,pt.bg=c("red","blue"), title="gender", box.lty=0)
+legend("left",legend=unique(e$same.dept),lty=c(1,2), title = "same.dept",box.lty=0)
+legend("topright", legend=sort(unique(e$friendship)), lwd=sort(unique(e$friendship)), title="friendship", box.lty=0)
+```
+
+`ggraph` can use all the layout mentioned above by specifying it in `ggraph(g, layout=...)`. Besides, ggraph has addtional useful layout. 
+
+* dendrogram: dendrogram layout not only take in graph object but also dendrogram object (`as.dendrogram(hclust(dist(...)))`). ggraph will automatically convert dendrogram to igraph by `den_to_igraph`. It ususally plots using `geom_edge_diagonal()` or ` geom_edge_elbow()`.
+
+```{r dendrogram}
+den <- as.dendrogram(hclust(dist(mtcars)))
+p1 = ggraph(den, 'dendrogram') + 
+    geom_edge_diagonal() +
+    geom_node_text(aes(label=label), angle=90, nudge_y=-30, size=3) +
+  theme_void()
+p2 = ggraph(den, 'dendrogram', circular = TRUE) + 
+    geom_edge_elbow() +
+    geom_node_text(aes(label=label), angle=45, size=2) +
+  coord_fixed()+
+  theme_void()
+grid.arrange(p1,p2,ncol=2)
+```
+
+* hive: make nodes group into a axis and connecting axis instead. 
+
+```{r hive}
+V(g)$age_range = factor(V(g)$age_range)
+
+ggraph(g, 'hive', axis = 'age_range', sort.by = 'age') + 
+    geom_edge_hive(aes(color = factor(same.dept), edge_width=friendship)) + 
+    geom_axis_hive(aes(color = age_range), size = 3, label = FALSE) + 
+    coord_fixed() +
+  scale_edge_width(range=c(1,3))
+```
+
+* linear: make nodes only the same line so that arc connections were made. 
+
+```{r linear_arc}
+ggraph(g, layout = 'linear', sort.by = 'age') + 
+    geom_edge_arc(aes(color = factor(same.dept), edge_alpha=friendship)) +
+  geom_node_point(aes(color=gender), size=4, alpha=0.5) +
+  geom_node_text(aes(label=name), angle=45) +
+  theme_void() +
+  scale_edge_alpha(range=c(0.3,1))
+```
+
+More functions about ggraph refer to https://www.rdocumentation.org/packages/ggraph/versions/1.0.2
