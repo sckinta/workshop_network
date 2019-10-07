@@ -213,14 +213,14 @@ The subgraph can be induced by either vertex or edge names/index. The edge names
 
 ```{r subgraph}
 # induce a subgraph using a list of vertices
-induced_subgraph(g, v=c("Alice","Bob","Cecil"))
+igraph::induced_subgraph(g, v=c("Alice","Bob","Cecil"))
 
 # induce a subgraph using edges
 subgraph.edges(g, c("Bob|Alice","Cecil|Bob","Cecil|Alice"), delete.vertices = TRUE)
 
 # induce a subgraph using edges attribute (friendship score stronger than 3)
 e1 = E(g)[E(g)$friendship > 3]
-subgraph.edges(g, e1, delete.vertices = TRUE)
+igraph::subgraph.edges(g, e1, delete.vertices = TRUE)
 ```
 
 # Graph Advance

@@ -1,0 +1,232 @@
+---
+title: "Flight Route"
+author: "Chun Su"
+date: "10/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data
+Data used in this pratice problem is download from https://openflights.org/
+
+* airports: https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat
+* routes: https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat
+* airlines: https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat
+
+
+```{r lib, message=F, warning=F}
+library(tidyverse)
+library(igraph)
+library(ggraph)
+```
+
+```{r data, message=F}
+airports = read_csv(
+        "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat", 
+        col_names = c("airport_id","name","city","country","IATA","ICAO","latitude","longitude","altitude","timezone","dst","tz_db","type","source"), 
+        col_types = cols(timezone = col_character()),
+        na = c("", "\\N")
+)
+
+routes = read_csv(
+        "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat", 
+        col_names = c("airline","airline_id","source_airport","source_airport_id","dest_airport","dest_airport_id","codeshare","stops","equipment") ,
+        na = c("", "\\N")
+)
+
+airlines = read_csv(
+        "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat", 
+        col_names = c("airline_id","airline_name","alias","IATA","ICAO","callsign","country","active"),
+        na = c("", "\\N")
+        )
+```
+
+# Data clean (optional)
+Clean out the data. This part is optional. The exercise can start by using clean data `flight.Rdata`.
+
+```{r data_clean}
+# clean routes (fill the airport_id which is NA using airports)
+routes = routes %>% 
+        select(source_airport_id, dest_airport_id, source_airport, dest_airport, airline, airline_id, stops) 
+
+fetch_airport_id <- function(airport_name) {
+        if(nchar(airport_name) == 3){
+                id = airports %>% filter(IATA==get("airport_name")) %>% select(airport_id) %>% .$airport_id
+        }else if (nchar(airport_name)==4){
+                id = airports %>% filter(ICAO==get("airport_name")) %>% select(airport_id) %>% .$airport_id
+        }
+        # if(length(id)==1){
+        #         id
+        # }else{
+        #         NA
+        # }
+        if (length(id)==1){
+                id
+        }else{
+                NA
+        }
+}
+
+routes = bind_rows(
+        routes %>% 
+        filter(!is.na(dest_airport_id), !is.na(source_airport_id)),
+        routes %>% 
+        filter(is.na(dest_airport_id) | is.na(source_airport_id)) %>% 
+        mutate(dest_airport_id=if_else(is.na(dest_airport_id), sapply(dest_airport, fetch_airport_id ), dest_airport_id)) %>% 
+        mutate(source_airport_id=if_else(is.na(source_airport_id), sapply(source_airport, fetch_airport_id ), source_airport_id))
+)
+
+fetch_airline_id <- function(airline){
+        if(nchar(airline)==2){
+                id =  airlines %>% filter(IATA==airline) %>% select(airline_id) %>% .$airline_id
+        } else if(nchar(airline)==3) {
+                id = airlines %>% filter(ICAO==airline) %>% select(airline_id) %>% .$airline_id
+        }
+        if (length(id)==1){
+                id
+        }else{
+                NA
+        }
+}
+
+routes = bind_rows(
+        routes %>% filter(!is.na(airline_id)),
+        routes %>% filter(is.na(airline_id)) %>% 
+        mutate(airline_id = ifelse(is.na(airline_id), sapply(airline, fetch_airline_id), airline_id)) 
+)
+
+routes = routes %>% na.omit
+
+# find conflicted information (airport_id and airport should be one-to-one pairing)
+routes_airports = bind_rows(
+        routes %>% select(airport=source_airport, airport_id= source_airport_id),
+        routes %>% select(airport=dest_airport, airport_id= dest_airport_id)
+) %>% distinct()
+
+
+semi_join(
+        routes_airports,
+        routes_airports %>% 
+        group_by(airport) %>% 
+        summarise(n_id=n_distinct(airport_id)) %>% 
+        ungroup() %>% filter(n_id > 1)
+)
+
+conflicts = semi_join(
+        routes_airports,
+        routes_airports %>% 
+                group_by(airport_id) %>% 
+                summarise(n_id=n_distinct(airport)) %>% 
+                ungroup() %>% filter(n_id > 1)
+)
+
+conflicts
+
+conflicts = anti_join(
+        conflicts,
+        airports %>% dplyr::rename(airport=IATA)
+) %>% select(airport_id,airport)
+
+conflicts
+
+routes = routes %>% 
+        mutate(source_airport = ifelse(source_airport=="SIC","NOP",source_airport)) %>% 
+        mutate(dest_airport = ifelse(dest_airport=="SIC","NOP",dest_airport))
+
+routes_airports = bind_rows(
+        routes %>% select(airport=source_airport, airport_id= source_airport_id),
+        routes %>% select(airport=dest_airport, airport_id= dest_airport_id)
+) %>% distinct()
+
+
+# airline clean up
+route_airlines = routes %>% select(airline, airline_id) %>% distinct()
+
+route_airlines %>% group_by(airline) %>% 
+        summarise(n_id=n_distinct(airline_id)) %>% 
+        ungroup() %>% filter(n_id > 1)
+
+
+route_airlines %>% group_by(airline_id) %>% 
+        summarise(n_id=n_distinct(airline)) %>% 
+        ungroup() %>% filter(n_id > 1)
+
+
+# add other airports attributes
+routes_airports = left_join(
+        routes_airports,
+        airports %>% select(airport_id, name, city, country, latitude, longitude, timezone)
+)
+
+# add other airlines attributes
+route_airlines = left_join(
+        route_airlines,
+        airlines %>% select(airline_id, airline_name, country, active)
+)
+
+save(routes, route_airlines, routes_airports, file = "flights.Rdata")
+```
+
+# build igraph from edge and vertex data.frame
+
+In this practice, we will use routes as edge and airports as vertices. 
+
+```{r build_graph}
+load("flights.Rdata")
+
+# build routes_g
+routes_g = igraph::graph_from_data_frame(
+        routes %>% select(from=source_airport, to=dest_airport, airline, stops),
+        directed = T,
+        vertices = routes_airports %>% 
+                dplyr::rename(name=airport, fullname=name) %>% 
+                select(name, fullname, country, city, latitude, longitude, timezone)
+)
+```
+
+# Exercise 1
+
+How many different ways with least stops to travel from Philadelphia in US `(city=="Philadelphia", country=="United States")` to Beijing in China `(city=="Beijing", country=="China")`?
+
+Hints: `all_shortest_paths()` to find possible tranfer paths, then get all possible airlines
+
+```{r exercise_1}
+# get the airport_id for the departure and destination
+
+# get shortest paths from depart to dest
+
+# extract airline info for each shortest path
+
+```
+
+# Exercise 2
+
+Plot all the possible ways with least stops from Philadelphia to Beijing. Label 1) airports from different countries with different color, 2) edges from the same airline with same color
+
+Hint: First create a phl2pek graph using shortest_path_airlines from exercise 1. Plot connection out using `geom_edge_fan` to draw multiple edges between same set of nodes. 
+
+```{r plot_flights, message=F}
+# create phl2pek graph using shortest_path_airlines
+
+
+# plot
+
+
+```
+
+# Exercise 3 (optional)
+
+To limit our options, just choose the paths in which connecting airlines are from the same airline and plot like Exercise 2
+
+```{r exercise_3, message=F}
+# subset path with same airline to connect
+
+# create phl2pek graph using shortest_path_same_airlines
+
+# plot
+
+```
+

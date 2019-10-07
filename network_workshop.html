@@ -192,9 +192,9 @@ library(gridExtra)</code></pre>
 <div id="igraph-object" class="section level1">
 <h1>IGRAPH object</h1>
 <pre class="r"><code>make_graph(letters[1:10], directed = T)</code></pre>
-<pre><code>## IGRAPH dde6cb7 DN-- 10 5 -- 
+<pre><code>## IGRAPH 365f78a DN-- 10 5 -- 
 ## + attr: name (v/c)
-## + edges from dde6cb7 (vertex names):
+## + edges from 365f78a (vertex names):
 ## [1] a-&gt;b c-&gt;d e-&gt;f g-&gt;h i-&gt;j</code></pre>
 </div>
 <div id="graph-basics" class="section level1">
@@ -216,15 +216,15 @@ edge_list</code></pre>
 <pre class="r"><code>m = as.matrix(edge_list)
 g = graph_from_edgelist(m,directed = TRUE)
 g</code></pre>
-<pre><code>## IGRAPH 3f45870 D--- 4 5 -- 
-## + edges from 3f45870:
+<pre><code>## IGRAPH 88c2878 D--- 4 5 -- 
+## + edges from 88c2878:
 ## [1] 1-&gt;2 2-&gt;3 2-&gt;4 3-&gt;2 4-&gt;1</code></pre>
 <p>If the edge is given in a single vector, the default make_graph will use the order of vector to make one-mode graph. It means that the first edge points from the first element to the second, the second edge from the third to the fourth, etc.</p>
 <pre class="r"><code>g = make_graph(letters[1:10], directed = T)
 g</code></pre>
-<pre><code>## IGRAPH 26d1404 DN-- 10 5 -- 
+<pre><code>## IGRAPH 00c6bfa DN-- 10 5 -- 
 ## + attr: name (v/c)
-## + edges from 26d1404 (vertex names):
+## + edges from 00c6bfa (vertex names):
 ## [1] a-&gt;b c-&gt;d e-&gt;f g-&gt;h i-&gt;j</code></pre>
 </div>
 <div id="from-adjacent-matrix" class="section level3">
@@ -248,9 +248,9 @@ adj_matrix</code></pre>
 ## j 0 1 0 0 0 0 0 0 0 0</code></pre>
 <pre class="r"><code>g = graph_from_adjacency_matrix(adj_matrix, mode = &quot;undirected&quot;, weighted = T)
 g</code></pre>
-<pre><code>## IGRAPH 89e86c3 UNW- 10 12 -- 
+<pre><code>## IGRAPH b038d8b UNW- 10 12 -- 
 ## + attr: name (v/c), weight (e/n)
-## + edges from 89e86c3 (vertex names):
+## + edges from b038d8b (vertex names):
 ##  [1] a--b a--c a--d a--e a--h b--d b--f b--j c--d f--i g--i h--i</code></pre>
 <p>There are other modes available with details at <a href="https://igraph.org/r/doc/graph_from_adjacency_matrix.html" class="uri">https://igraph.org/r/doc/graph_from_adjacency_matrix.html</a></p>
 </div>
@@ -270,10 +270,10 @@ relations &lt;- data.frame(
   )
 g &lt;- graph_from_data_frame(relations, directed=TRUE, vertices=actors)
 g</code></pre>
-<pre><code>## IGRAPH 50386d5 DN-- 5 6 -- 
+<pre><code>## IGRAPH 02e0700 DN-- 5 6 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 50386d5 (vertex names):
+## + edges from 02e0700 (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice</code></pre>
 <pre class="r"><code>plot(g)</code></pre>
@@ -289,16 +289,16 @@ g</code></pre>
 <pre class="r"><code># sample 10 vertex, every possible edge is created with the same constant probability 0.3
 set.seed(12)
 sample_gnp(10, 0.3)</code></pre>
-<pre><code>## IGRAPH ac31b9e U--- 10 11 -- Erdos renyi (gnp) graph
+<pre><code>## IGRAPH b2b237b U--- 10 11 -- Erdos renyi (gnp) graph
 ## + attr: name (g/c), type (g/c), loops (g/l), p (g/n)
-## + edges from ac31b9e:
+## + edges from b2b237b:
 ##  [1] 2-- 5 3-- 5 5-- 6 4-- 7 3-- 8 6-- 8 1-- 9 3-- 9 8-- 9 3--10 8--10</code></pre>
 <pre class="r"><code># sample 10 vertex, create a 15-edge graph
 set.seed(123)
 sample_gnm(10, 15)</code></pre>
-<pre><code>## IGRAPH 8f5e19b U--- 10 15 -- Erdos renyi (gnm) graph
+<pre><code>## IGRAPH c473636 U--- 10 15 -- Erdos renyi (gnm) graph
 ## + attr: name (g/c), type (g/c), loops (g/l), m (g/n)
-## + edges from 8f5e19b:
+## + edges from c473636:
 ##  [1] 1-- 2 1-- 4 2-- 4 3-- 4 5-- 6 2-- 7 3-- 7 5-- 7 2-- 8 3-- 8 6-- 8
 ## [12] 1-- 9 4-- 9 5--10 9--10</code></pre>
 <ul>
@@ -306,10 +306,10 @@ sample_gnm(10, 15)</code></pre>
 </ul>
 <pre class="r"><code>set.seed(123)
 sample_pa(100, power = 2)</code></pre>
-<pre><code>## IGRAPH 51fcbeb D--- 100 99 -- Barabasi graph
+<pre><code>## IGRAPH d6bd628 D--- 100 99 -- Barabasi graph
 ## + attr: name (g/c), power (g/n), m (g/n), zero.appeal (g/n),
 ## | algorithm (g/c)
-## + edges from 51fcbeb:
+## + edges from d6bd628:
 ##  [1]  2-&gt; 1  3-&gt; 1  4-&gt; 2  5-&gt; 1  6-&gt; 4  7-&gt; 5  8-&gt; 1  9-&gt; 1 10-&gt; 6 11-&gt; 1
 ## [11] 12-&gt; 1 13-&gt;10 14-&gt; 1 15-&gt; 1 16-&gt; 1 17-&gt; 1 18-&gt; 5 19-&gt; 1 20-&gt; 1 21-&gt; 1
 ## [21] 22-&gt;11 23-&gt; 4 24-&gt; 1 25-&gt; 1 26-&gt;24 27-&gt; 1 28-&gt; 1 29-&gt; 1 30-&gt; 1 31-&gt; 1
@@ -359,48 +359,48 @@ igraph::as_data_frame(g, what = &quot;edges&quot;)</code></pre>
 <p>Vertices and edges can be added to existing graph by <code>add_()</code> or <code>+</code>. Please be aware that vertices of added new edges must be from known vertices already in the graph.</p>
 <pre class="r"><code># add vertices 
 g %&gt;% add_vertices(2, name=c(&quot;Lisa&quot;,&quot;Zack&quot;)) # the first argument is number of vertex</code></pre>
-<pre><code>## IGRAPH 061db38 DN-- 7 6 -- 
+<pre><code>## IGRAPH fda0d32 DN-- 7 6 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 061db38 (vertex names):
+## + edges from fda0d32 (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice</code></pre>
 <pre class="r"><code>g + vertices(c(&quot;Lisa&quot;,&quot;Zack&quot;))</code></pre>
-<pre><code>## IGRAPH d719f3b DN-- 7 6 -- 
+<pre><code>## IGRAPH ecb0d1e DN-- 7 6 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from d719f3b (vertex names):
+## + edges from ecb0d1e (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice</code></pre>
 <pre class="r"><code># add connected edges (even number of vertices). The vertices must be from known vertices already in the graph 
 g %&gt;% add_edges(c(&quot;Alice&quot;,&quot;Bob&quot;))</code></pre>
-<pre><code>## IGRAPH 622eb4a DN-- 5 7 -- 
+<pre><code>## IGRAPH 55c3ac1 DN-- 5 7 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 622eb4a (vertex names):
+## + edges from 55c3ac1 (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice Alice    -&gt;Bob</code></pre>
 <pre class="r"><code>g + edge(c(&quot;Alice&quot;,&quot;Bob&quot;))</code></pre>
-<pre><code>## IGRAPH 3b547c0 DN-- 5 7 -- 
+<pre><code>## IGRAPH b01e05a DN-- 5 7 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 3b547c0 (vertex names):
+## + edges from b01e05a (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice Alice    -&gt;Bob</code></pre>
 <pre class="r"><code># add paths. The vertices must be from known vertices already in the graph 
 g + path(&quot;Alice&quot;,&quot;Bob&quot;,&quot;Cecil&quot;)</code></pre>
-<pre><code>## IGRAPH b284963 DN-- 5 8 -- 
+<pre><code>## IGRAPH 35b8ad3 DN-- 5 8 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from b284963 (vertex names):
+## + edges from 35b8ad3 (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice Alice    -&gt;Bob   Bob      -&gt;Cecil</code></pre>
 <pre class="r"><code># If a new vertex needs to be added to current graph, using add graph method instead 
 g + make_graph(c(&quot;Alice&quot;,&quot;Bob&quot;,&quot;Bob&quot;,&quot;Melisa&quot;))</code></pre>
-<pre><code>## IGRAPH f60e076 DN-- 6 8 -- 
+<pre><code>## IGRAPH be8300f DN-- 6 8 -- 
 ## + attr: age (v/n), gender (v/c), name (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from f60e076 (vertex names):
+## + edges from be8300f (vertex names):
 ## [1] Esmeralda-&gt;Alice  David    -&gt;Bob    David    -&gt;Alice  Cecil    -&gt;Bob   
 ## [5] Cecil    -&gt;Alice  Bob      -&gt;Melisa Bob      -&gt;Alice  Alice    -&gt;Bob</code></pre>
 <p>Delete can be done in a similar way.</p>
@@ -408,33 +408,33 @@ g + make_graph(c(&quot;Alice&quot;,&quot;Bob&quot;,&quot;Bob&quot;,&quot;Melisa&
 vertex_df = g %&gt;% igraph::as_data_frame(what=&quot;vertices&quot;) %&gt;% tbl_df %&gt;% mutate(index=row_number()) %&gt;% filter(age &lt; 30)
 # remove vertices by index number 
 g %&gt;% delete_vertices(vertex_df$index)</code></pre>
-<pre><code>## IGRAPH c4c58e3 DN-- 4 5 -- 
+<pre><code>## IGRAPH daa97c3 DN-- 4 5 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from c4c58e3 (vertex names):
+## + edges from daa97c3 (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice David-&gt;Alice David-&gt;Bob</code></pre>
 <pre class="r"><code># remove vertice by name 
 g %&gt;% delete_vertices(vertex_df$name)</code></pre>
-<pre><code>## IGRAPH 2faaa08 DN-- 4 5 -- 
+<pre><code>## IGRAPH 4b7ecab DN-- 4 5 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 2faaa08 (vertex names):
+## + edges from 4b7ecab (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice David-&gt;Alice David-&gt;Bob</code></pre>
 <pre class="r"><code>### remove the edges with friendship &lt;= 1 
 edge_df = g %&gt;% igraph::as_data_frame(what=&quot;edges&quot;) %&gt;% tbl_df %&gt;% mutate(index=row_number()) %&gt;% mutate(name=paste(from,to,sep=&quot;|&quot;)) %&gt;% filter(friendship &lt;= 1)
 # remove vertice by index
 g %&gt;% delete_edges(edge_df$index)</code></pre>
-<pre><code>## IGRAPH 05cc895 DN-- 5 4 -- 
+<pre><code>## IGRAPH 79d614e DN-- 5 4 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 05cc895 (vertex names):
+## + edges from 79d614e (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice David-&gt;Alice</code></pre>
 <pre class="r"><code># remove vertice by name 
 g %&gt;% delete_edges(edge_df$name)</code></pre>
-<pre><code>## IGRAPH c4e12ad DN-- 5 4 -- 
+<pre><code>## IGRAPH 21b381d DN-- 5 4 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from c4e12ad (vertex names):
+## + edges from 21b381d (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice David-&gt;Alice</code></pre>
 <p>The attributes of vertices and edges can be added or deleted to existing graph by <code>set_vertex_attr()</code>/<code>set_edge_attr()</code> or <code>delete_vertex_attr()</code>/<code>delete_edge_attr()</code>.</p>
 <pre class="r"><code># add a new attr &quot;relationship&quot; for people in the same dept
@@ -442,10 +442,10 @@ edge_df = g %&gt;% igraph::as_data_frame(what=&quot;edges&quot;) %&gt;%
   mutate(relationship=ifelse(same.dept,&quot;collegue&quot;,NA))
 
 g %&gt;% set_edge_attr(&quot;relationship&quot;, which(!is.na(edge_df$relationship)), edge_df$relationship[!is.na(edge_df$relationship)])</code></pre>
-<pre><code>## IGRAPH 50386d5 DN-- 5 6 -- 
+<pre><code>## IGRAPH 02e0700 DN-- 5 6 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n), relationship (e/c)
-## + edges from 50386d5 (vertex names):
+## + edges from 02e0700 (vertex names):
 ## [1] Bob      -&gt;Alice Cecil    -&gt;Bob   Cecil    -&gt;Alice David    -&gt;Alice
 ## [5] David    -&gt;Bob   Esmeralda-&gt;Alice</code></pre>
 </div>
@@ -476,26 +476,26 @@ plot(g4, edge.arrow.size=.4)</code></pre>
 <h2>Induce subgraph</h2>
 <p>The subgraph can be induced by either vertex or edge names/index. The edge names are in the form <code>from|to</code>.</p>
 <pre class="r"><code># induce a subgraph using a list of vertices
-induced_subgraph(g, v=c(&quot;Alice&quot;,&quot;Bob&quot;,&quot;Cecil&quot;))</code></pre>
-<pre><code>## IGRAPH 06c86f6 DN-- 3 3 -- 
+igraph::induced_subgraph(g, v=c(&quot;Alice&quot;,&quot;Bob&quot;,&quot;Cecil&quot;))</code></pre>
+<pre><code>## IGRAPH 0dd4842 DN-- 3 3 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 06c86f6 (vertex names):
+## + edges from 0dd4842 (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice</code></pre>
 <pre class="r"><code># induce a subgraph using edges
 subgraph.edges(g, c(&quot;Bob|Alice&quot;,&quot;Cecil|Bob&quot;,&quot;Cecil|Alice&quot;), delete.vertices = TRUE)</code></pre>
-<pre><code>## IGRAPH 4536d59 DN-- 3 3 -- 
+<pre><code>## IGRAPH 18fd411 DN-- 3 3 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from 4536d59 (vertex names):
+## + edges from 18fd411 (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice</code></pre>
 <pre class="r"><code># induce a subgraph using edges attribute (friendship score stronger than 3)
 e1 = E(g)[E(g)$friendship &gt; 3]
-subgraph.edges(g, e1, delete.vertices = TRUE)</code></pre>
-<pre><code>## IGRAPH c8eebdb DN-- 3 3 -- 
+igraph::subgraph.edges(g, e1, delete.vertices = TRUE)</code></pre>
+<pre><code>## IGRAPH 913598b DN-- 3 3 -- 
 ## + attr: name (v/c), age (v/n), gender (v/c), same.dept (e/l),
 ## | friendship (e/n), advice (e/n)
-## + edges from c8eebdb (vertex names):
+## + edges from 913598b (vertex names):
 ## [1] Bob  -&gt;Alice Cecil-&gt;Bob   Cecil-&gt;Alice</code></pre>
 </div>
 </div>
@@ -554,36 +554,36 @@ distances(gr, mode=&quot;all&quot;)</code></pre>
 <pre class="r"><code># shortest path to connect
 all_shortest_paths(gr, 1,10)$res</code></pre>
 <pre><code>## [[1]]
-## + 4/10 vertices, from 952bcdf:
+## + 4/10 vertices, from c6e02ad:
 ## [1]  1  9  8 10
 ## 
 ## [[2]]
-## + 4/10 vertices, from 952bcdf:
+## + 4/10 vertices, from c6e02ad:
 ## [1]  1  9  3 10</code></pre>
 <pre class="r"><code># all path to connect
 all_simple_paths(gr, 1,10)</code></pre>
 <pre><code>## [[1]]
-## + 7/10 vertices, from 952bcdf:
+## + 7/10 vertices, from c6e02ad:
 ## [1]  1  9  3  5  6  8 10
 ## 
 ## [[2]]
-## + 5/10 vertices, from 952bcdf:
+## + 5/10 vertices, from c6e02ad:
 ## [1]  1  9  3  8 10
 ## 
 ## [[3]]
-## + 4/10 vertices, from 952bcdf:
+## + 4/10 vertices, from c6e02ad:
 ## [1]  1  9  3 10
 ## 
 ## [[4]]
-## + 5/10 vertices, from 952bcdf:
+## + 5/10 vertices, from c6e02ad:
 ## [1]  1  9  8  3 10
 ## 
 ## [[5]]
-## + 7/10 vertices, from 952bcdf:
+## + 7/10 vertices, from c6e02ad:
 ## [1]  1  9  8  6  5  3 10
 ## 
 ## [[6]]
-## + 4/10 vertices, from 952bcdf:
+## + 4/10 vertices, from c6e02ad:
 ## [1]  1  9  8 10</code></pre>
 </div>
 <div id="transitivity" class="section level3">
@@ -729,15 +729,15 @@ plot(g2)</code></pre>
 dg &lt;- decompose.graph(gr)
 dg</code></pre>
 <pre><code>## [[1]]
-## IGRAPH 955d274 U--- 8 10 -- Erdos renyi (gnp) graph
+## IGRAPH e353a17 U--- 8 10 -- Erdos renyi (gnp) graph
 ## + attr: name (g/c), type (g/c), loops (g/l), p (g/n)
-## + edges from 955d274:
+## + edges from e353a17:
 ##  [1] 2--4 3--4 4--5 3--6 5--6 1--7 3--7 6--7 3--8 6--8
 ## 
 ## [[2]]
-## IGRAPH 03303d3 U--- 2 1 -- Erdos renyi (gnp) graph
+## IGRAPH a3355b8 U--- 2 1 -- Erdos renyi (gnp) graph
 ## + attr: name (g/c), type (g/c), loops (g/l), p (g/n)
-## + edge from 03303d3:
+## + edge from a3355b8:
 ## [1] 1--2</code></pre>
 <pre class="r"><code># summary statics graph components
 components(gr)</code></pre>
@@ -764,22 +764,22 @@ cliques(g, min=3)</code></pre>
 <pre><code>## Warning in cliques(g, min = 3): At igraph_cliquer.c:56 :Edge directions are
 ## ignored for clique calculations</code></pre>
 <pre><code>## [[1]]
-## + 3/5 vertices, named, from 50386d5:
+## + 3/5 vertices, named, from 02e0700:
 ## [1] Alice Bob   David
 ## 
 ## [[2]]
-## + 3/5 vertices, named, from 50386d5:
+## + 3/5 vertices, named, from 02e0700:
 ## [1] Alice Bob   Cecil</code></pre>
 <pre class="r"><code># get cliques with largest number of vertices
 largest_cliques(g)</code></pre>
 <pre><code>## Warning in largest_cliques(g): At cliques.c:1087 :directionality of edges
 ## is ignored for directed graphs</code></pre>
 <pre><code>## [[1]]
-## + 3/5 vertices, named, from 50386d5:
+## + 3/5 vertices, named, from 02e0700:
 ## [1] Alice Bob   David
 ## 
 ## [[2]]
-## + 3/5 vertices, named, from 50386d5:
+## + 3/5 vertices, named, from 02e0700:
 ## [1] Alice Bob   Cecil</code></pre>
 <pre class="r"><code># plot cliques
 cl &lt;- cliques(gr, 3)
