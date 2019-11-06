@@ -246,7 +246,7 @@ shortest_path_airlines = lapply(shortest_paths, extract_airlineInf2)
 
 names(shortest_path_airlines) = sapply(shortest_paths, function(x){paste(x,collapse="->")})
 
-
+shortest_path_airlines
 ```
 
 # Exercise 2
